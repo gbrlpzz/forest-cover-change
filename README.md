@@ -1,6 +1,6 @@
 # Forest Change Detection (1985-2023) using Landsat
 
-##Overview
+## Overview
 
 This Google Earth Engine (GEE) script performs a retrospective analysis of forest change (loss and gain) between 1985 and 2023 for a specified Region of Interest (ROI). It utilizes harmonized surface reflectance data from Landsat 5, 7, 8, and 9 missions to generate two primary outputs:
 
