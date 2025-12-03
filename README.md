@@ -76,7 +76,8 @@ Landsat 8 OLI/TIRS: LANDSAT/LC08/C02/T1_L2
 
 Landsat 9 OLI-2/TIRS-2: LANDSAT/LC09/C02/T1_L2
 
-
+## License
+This project is licensed under the Apache License 2.0. See LICENSE for full terms.
 
 ## Contact
 
