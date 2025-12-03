@@ -8,7 +8,7 @@ Deforestation (Loss) Mask: Areas classified as forest during the baseline period
 
 Reforestation (Gain) Map: Areas classified as open land during the baseline period that transitioned to forest by the end period. For these gain areas, the map provides the approximate year of detection, the year the pixel first crossed the forest threshold.
 
-The workflow for regions where abandonment and forest transition occurred before the Sentinel-2 era, requiring multi-decadal Landsat continuity.
+The workflow  is optimised for regions where abandonment and forest transition occurred before the Sentinel-2 era, requiring multi-decadal Landsat continuity.
 
 The results are displayed on the map with color coding and configured for export as GeoTIFFs to Google Drive.
 
