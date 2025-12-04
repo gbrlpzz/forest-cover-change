@@ -1,4 +1,4 @@
-# Forest Change Detection (1985-2025) using Landsat
+# Forest Cover Change Detection (1985-2025) using Landsat
 
 ## Overview
 
