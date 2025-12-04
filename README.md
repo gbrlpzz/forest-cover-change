@@ -2,7 +2,7 @@
 
 ## Overview
 
-This Google Earth Engine (GEE) script performs a retrospective analysis of forest change (loss and gain) between 1985 and 2025 for a specified Region of Interest (ROI). It utilizes harmonized surface reflectance data from Landsat 5, 7, 8, and 9 missions to generate two primary outputs:
+This Google Earth Engine (GEE) script performs a retrospective analysis of forest change on 40 years data between 1985 and 2025 for a specified Region of Interest (ROI). It utilizes harmonized surface reflectance data from Landsat 5, 7, 8, and 9 missions to generate two primary outputs:
 
 Deforestation (Loss) Mask: Areas classified as forest during the baseline period (1985–1989) that transitioned to open land by the end period (2021–2025).
 
