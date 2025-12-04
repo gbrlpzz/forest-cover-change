@@ -22,11 +22,11 @@ All available Landsat 5, 7, 8, and 9 Level-2, Collection 2, Tier 1 Surface Refle
 
 2. Forest Classification
 
-A fixed NDVI threshold of 0.4 (forestThreshold) is used to classify pixels:
+A fixed NDVI threshold of 0.45 (forestThreshold) is used to classify pixels:
 
-NDVI > 0.4: Forest
+NDVI > 0.45: Forest
 
-NDVI ≤ 0.4: Open Land / Non-Forest
+NDVI ≤ 0.45: Open Land / Non-Forest
 
 3. Change Calculation
 
@@ -40,11 +40,11 @@ Reforestation (Gain): Pixels that were Open in the Start State and Forest in the
 
 4. Epoch of Recovery (5-Year Resolution)
 
-For pixels identified as Reforestation, a 5-year epoch analysis is performed across seven periods: 1990–1994, 1995–1999, 2000–2004, 2005–2009, 2010–2014, 2015–2019, and 2020–2025. The script finds the earliest epoch in which the pixel's median summer NDVI first crosses the 0.4 forest threshold. This epoch is recorded in the finalRecoveryMap, providing 7 distinct temporal classes for visualization.
+For pixels identified as Reforestation, a 5-year epoch analysis is performed across seven periods: 1990–1994, 1995–1999, 2000–2004, 2005–2009, 2010–2014, 2015–2019, and 2020–2025. The script finds the earliest epoch in which the pixel's median summer NDVI first crosses the 0.45 forest threshold. This epoch is recorded in the finalRecoveryMap, providing 7 distinct temporal classes for visualization.
 
 ## Example Output
 
-<img width="1289" height="906" alt="Screenshot 2025-12-03 at 18 18 59" src="https://github.com/user-attachments/assets/e2533ce5-cfd6-448f-8f5d-583edd25e035" />
+![Example output showing forest change detection with 5-year epochs](example_output_2025.jpg)
 
 ## Intended Applications
 
@@ -63,7 +63,7 @@ While Sentinel-2 offers higher spatial resolution (10 m), this system uses **har
 |----------|-------------|---------------|
 | startYear | Start year for annual change analysis. | 1985 |
 | endYear | End year for annual change analysis. | 2025 |
-| forestThreshold | NDVI value used to define forest cover. | 0.4 |
+| forestThreshold | NDVI value used to define forest cover. | 0.45 |
 | roi | The region of interest for analysis. | Current Map Bounds |
 
 ## Data Sources

@@ -4,7 +4,7 @@
 var startYear = 1985;
 var endYear = 2025;
 // NDVI threshold to classify a pixel as forest
-var forestThreshold = 0.4;
+var forestThreshold = 0.45;
 
 // Define Region of Interest (ROI). If not explicitly defined, use the map view.
 var roi = roi || Map.getBounds(true);
