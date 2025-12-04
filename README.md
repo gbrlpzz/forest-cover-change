@@ -1,12 +1,12 @@
-# Forest Change Detection (1985-2023) using Landsat
+# Forest Change Detection (1985-2025) using Landsat
 
 ## Overview
 
-This Google Earth Engine (GEE) script performs a retrospective analysis of forest change (loss and gain) between 1985 and 2023 for a specified Region of Interest (ROI). It utilizes harmonized surface reflectance data from Landsat 5, 7, 8, and 9 missions to generate two primary outputs:
+This Google Earth Engine (GEE) script performs a retrospective analysis of forest change (loss and gain) between 1985 and 2025 for a specified Region of Interest (ROI). It utilizes harmonized surface reflectance data from Landsat 5, 7, 8, and 9 missions to generate two primary outputs:
 
-Deforestation (Loss) Mask: Areas classified as forest during the baseline period (1985–1987) that transitioned to open land by the end period (2021–2023).
+Deforestation (Loss) Mask: Areas classified as forest during the baseline period (1985–1989) that transitioned to open land by the end period (2021–2025).
 
-Reforestation (Gain) Map: Areas classified as open land during the baseline period that transitioned to forest by the end period. For these gain areas, the map provides the approximate year of detection, the year the pixel first crossed the forest threshold.
+Reforestation (Gain) Map: Areas classified as open land during the baseline period that transitioned to forest by the end period. For these gain areas, the map provides the approximate **epoch of detection** (5-year period) when the pixel first crossed the forest threshold.
 
 The workflow  is optimised for regions where abandonment and forest transition occurred before the Sentinel-2 era, requiring multi-decadal Landsat continuity.
 
@@ -22,25 +22,25 @@ All available Landsat 5, 7, 8, and 9 Level-2, Collection 2, Tier 1 Surface Refle
 
 2. Forest Classification
 
-A fixed NDVI threshold of 0.45 (forestThreshold) is used to classify pixels:
+A fixed NDVI threshold of 0.4 (forestThreshold) is used to classify pixels:
 
-NDVI > 0.45: Forest
+NDVI > 0.4: Forest
 
-NDVI ≤ 0.45: Open Land / Non-Forest
+NDVI ≤ 0.4: Open Land / Non-Forest
 
 3. Change Calculation
 
 Change is determined by comparing the median summer NDVI (June, July, August, September) across two distinct periods:
 
-Baseline (Start State): 1985–1987
-Final (End State): 2021–2023
+Baseline (Start State): 1985–1989 (5-year window)
+Final (End State): 2021–2025 (5-year window)
 
 Deforestation (Loss): Pixels that were Forest in the Start State and Open in the End State.
 Reforestation (Gain): Pixels that were Open in the Start State and Forest in the End State.
 
-4. Year of Recovery
+4. Epoch of Recovery (5-Year Resolution)
 
-For pixels identified as Reforestation, a pixel-by-pixel time series analysis is performed between startYear (1985) and endYear (2023). The script finds the earliest year in this range where the pixel's median summer NDVI first crosses the 0.45 forest threshold. This year is recorded in the finalRecoveryMap.
+For pixels identified as Reforestation, a 5-year epoch analysis is performed across seven periods: 1990–1994, 1995–1999, 2000–2004, 2005–2009, 2010–2014, 2015–2019, and 2020–2025. The script finds the earliest epoch in which the pixel's median summer NDVI first crosses the 0.4 forest threshold. This epoch is recorded in the finalRecoveryMap, providing 7 distinct temporal classes for visualization.
 
 ## Example Output
 
@@ -62,8 +62,8 @@ While Sentinel-2 offers higher spatial resolution (10 m), this system uses **har
 | Variable | Description | Default Value |
 |----------|-------------|---------------|
 | startYear | Start year for annual change analysis. | 1985 |
-| endYear | End year for annual change analysis. | 2023 |
-| forestThreshold | NDVI value used to define forest cover. | 0.45 |
+| endYear | End year for annual change analysis. | 2025 |
+| forestThreshold | NDVI value used to define forest cover. | 0.4 |
 | roi | The region of interest for analysis. | Current Map Bounds |
 
 ## Data Sources
