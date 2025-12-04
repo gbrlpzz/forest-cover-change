@@ -81,8 +81,8 @@ Landsat 9 OLI-2/TIRS-2: LANDSAT/LC09/C02/T1_L2
 If you use this tool in your research, please cite:
 
 ```
-Pizzi, G. (2025). GEE Landsat Forest Coverage Detection Script. 
-GitHub repository. https://github.com/gabriele/remote-sensing-land-quality
+Pizzi, G. (2025). GEE Landsat Forest Cover Change Detection Script. 
+GitHub repository. https://github.com/gbrlpzz/forest-cover-change
 ```
 
 ## Contact
