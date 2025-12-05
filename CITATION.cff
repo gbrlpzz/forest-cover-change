@@ -14,7 +14,7 @@ abstract: >-
   A Google Earth Engine script for detecting multi-decadal vegetation change
   using Landsat Collection 2 time series. Implements 8-class change detection
   based on dynamic NDVI thresholds, Mann-Kendall trend significance testing,
-  and linear trend analysis. Features hemispherically adaptable seasonality,
+  and linear trend analysis. Features hemispherically adaptable seasonality.
 keywords:
   - vegetation change
   - NDVI
