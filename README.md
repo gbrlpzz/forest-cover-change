@@ -1,6 +1,6 @@
-# Vegetation Cover Change Detection via NDVI Trend Analysis
+# Vegetation Cover Change Detection
 
-A Google Earth Engine script for detecting 40-year vegetation change using harmonized Landsat time series.
+A Google Earth Engine script for detecting multi-decadal vegetation change using Landsat Collection 2 time series.
 
 ## Quick Start
 
@@ -11,20 +11,24 @@ A Google Earth Engine script for detecting 40-year vegetation change using harmo
 
 ## Features
 
-- **9 Change Classes**: Canopy loss, thinning, emerging biomass, thickening, densification, establishment, and 3 edge dynamics
-- **Multi-scale Trend Analysis**: Compares 40-year long-term trend with 10-year recent trend (Momentum)
-- **Momentum Indicator**: Identifies accelerating vs decelerating growth in the Inspector
-- **Spectral Harmonization**: Landsat 8/9 data harmonized to Landsat 7 standards (Roy et al., 2016)
-- **Dynamic Legend**: Updates based on active layer
+- **8 Change Classes**: Loss, Degradation, Emerging, Maturation, Densification, Establishment, Sparse Accumulation, and Transitional Accumulation
+- **Dynamic Configuration**: Easily adjustable analysis period (Year Start/End) and thresholds
+- **Hemispheric/Seasonal Adaptation**: Configurable START/END months for Northern/Southern hemisphere analysis
+- **Sensitivity Analysis**: Built-in parameter to test threshold stability
+- **Multi-scale Trend Analysis**: Compares long-term trend with recent short-term trend
+- **Trend Acceleration**: Identifies accelerating vs decelerating growth in the Inspector
+- **Statistical Significance**: Trends filtered by Mann-Kendall test (p < 0.05) to reject noise.
+- **Collection 2 Natively**: Uses USGS Collection 2 Level-2 Surface Reflectance directly without legacy harmonization.
+- **Dynamic Legend**: Updates based on active layer and time configuration
 - **Point Inspector**: NDVI, trend, classification, and projection
-- **Epoch Tracking**: When areas first reached dense canopy
+- **Epoch Tracking**: When areas first reached dense canopy (dynamically generated epochs)
 - **Trajectory Projection**: Estimated year to reach dense canopy
 
 ## Layers
 
 | Layer | Default | Description |
 |-------|---------|-------------|
-| Vegetation Change | ✓ On | 9-class change detection |
+| Vegetation Change | ✓ On | 8-class change detection |
 | Canopy Establishment Epoch | Off | When area first reached dense canopy |
 | Years to Dense Canopy | Off | Projected years for gaining areas |
 
@@ -40,8 +44,9 @@ A Google Earth Engine script for detecting 40-year vegetation change using harmo
 ## Limitations
 
 - **Thresholds are approximate**: Optimal values vary by region and ecosystem
-- **Linear trend assumption**: Vegetation change is often nonlinear
-- **No ground validation**: Results should be validated locally
+- **Linearity Assumption**: The "Years to Dense Canopy" projection is a theoretical signal, not an ecological prediction.
+- **Validation Status (Visual Only)**: This tool is experimental. Accuracy has been assessed visually but not quantitatively.
+- **Sensor Homogeneity**: Minor spectral differences (TM vs OLI) are uncorrected but deemed acceptable for Collection 2.
 - **30m resolution**: May not capture fine-scale patterns
 
 See [docs/methodology.pdf](docs/methodology.pdf) for documentation, limitations, and references.
@@ -58,7 +63,7 @@ If you use this software in your research, please cite:
 **APA:**
 ```
 Pizzi, G. (2025). Vegetation Cover Change Detection (Version 2.0.0) [Computer software]. 
-[https://github.com/gbrlpzz/ndvi-vegetation-cover-change](https://github.com/gbrlpzz/ndvi-vegetation-cover-change)
+https://github.com/gbrlpzz/ndvi-vegetation-cover-change
 ```
 
 **BibTeX:**

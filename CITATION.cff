@@ -11,11 +11,10 @@ authors:
 repository-code: "https://github.com/gbrlpzz/ndvi-vegetation-cover-change"
 url: "https://github.com/gbrlpzz/ndvi-vegetation-cover-change"
 abstract: >-
-  A Google Earth Engine script for detecting 40-year vegetation change
-  using harmonized Landsat time series (1985-2025). Implements 9-class
-  change detection based on NDVI thresholds and linear trend analysis,
-  with epoch tracking for canopy establishment and trajectory projection
-  for biomass accumulation.
+  A Google Earth Engine script for detecting multi-decadal vegetation change
+  using Landsat Collection 2 time series. Implements 8-class change detection
+  based on dynamic NDVI thresholds, Mann-Kendall trend significance testing,
+  and linear trend analysis. Features hemispherically adaptable seasonality,
 keywords:
   - vegetation change
   - NDVI
