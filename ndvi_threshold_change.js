@@ -5,6 +5,8 @@ var startYear = 1985;
 var endYear = 2025;
 // NDVI threshold to classify a pixel as forest
 var forestThreshold = 0.45;
+// Agriculture threshold: Minimum NDVI to ensure land is not plowed/harvested to bare soil
+var agriThreshold = 0.25;
 
 // Define Region of Interest (ROI). If not explicitly defined, use the map view.
 var roi = roi || Map.getBounds(true);
@@ -63,7 +65,48 @@ var endNDVI = fullCollection.filterDate('2021-01-01', '2025-12-31')
 var isForest = endNDVI.gt(forestThreshold);
 var isOpen = endNDVI.lte(forestThreshold);
 
-// C. CHANGE MASKS
+// C. VEGETATION TREND ANALYSIS (Full 40-year period)
+// 1. Stability Check: Minimum NDVI during extended growing season (Apr-Nov)
+// Must be > agriThreshold to rule out plowing/harvesting to bare soil.
+// We use the 10th percentile to be robust against noise but sensitive to drops.
+var recentMin = fullCollection.filterDate('2021-01-01', '2025-12-31')
+  .filter(ee.Filter.calendarRange(4, 11, 'month')) // Extended growing season
+  .map(function (img) { return img.normalizedDifference(['NIR', 'Red']); })
+  .reduce(ee.Reducer.percentile([10])); // 10th percentile
+var isStable = recentMin.gt(agriThreshold);
+
+// 2. Trend Check: Linear regression on Summer NDVI from 1985-2025 (full period)
+var trendCollection = fullCollection.filterDate(startYear + '-01-01', endYear + '-12-31')
+  .filter(ee.Filter.calendarRange(6, 9, 'month'))
+  .map(function (img) {
+    var ndvi = img.normalizedDifference(['NIR', 'Red']).rename('NDVI');
+    // Use ee.Image.constant() to convert server-side number to Image
+    var t = ee.Image.constant(img.get('system:time_start')).divide(31536000000).float().rename('t');
+    return ndvi.addBands(t);
+  });
+var slope = trendCollection.select(['t', 'NDVI']).reduce(ee.Reducer.linearFit()).select('scale');
+
+// 3. Slope Taxonomy (5 classes)
+// Class 1: Strong Greening (slope > 0.005/yr, ~0.2 NDVI increase over 40 years)
+// Class 2: Moderate Greening (slope > 0.002/yr, ~0.08 NDVI increase)
+// Class 3: Weak Greening (slope > 0.001/yr, ~0.04 NDVI increase)
+// Class 4: Stable (-0.001 to 0.001/yr)
+// Class 5: Browning (slope < -0.001/yr)
+var slopeClass = ee.Image(0)
+  .where(slope.lt(-0.001), 5)  // Browning
+  .where(slope.gte(-0.001).and(slope.lte(0.001)), 4)  // Stable
+  .where(slope.gt(0.001).and(slope.lte(0.002)), 3)  // Weak Greening
+  .where(slope.gt(0.002).and(slope.lte(0.005)), 2)  // Moderate Greening
+  .where(slope.gt(0.005), 1)   // Strong Greening
+  .rename('slope_class');
+
+// 4. Emerging Biomass Mask (for areas not yet forest)
+// Currently Open AND Stable (not plowed) AND showing any positive trend
+var isGaining = slope.gt(0.001);
+var emergingBiomass = isOpen.and(isStable).and(isGaining);
+
+
+// D. CHANGE MASKS
 // 1. Reforestation (Gain): Was Open -> Is Forest
 var reforestationMask = wasOpen.and(isForest);
 
@@ -123,7 +166,29 @@ Map.addLayer(deforestationMask.selfMask(),
   { palette: ['FF00FF'] }, // Magenta for Loss
   'Deforestation / Loss of Forest');
 
-// Layer 2: Reforestation (Gain)
+// Layer 2: Vegetation Trend (Slope Taxonomy)
+// 5-class diverging palette: Strong Green -> Weak Green -> Stable -> Browning
+var trendViz = {
+  min: 1,
+  max: 5,
+  palette: [
+    '1a9850', // Class 1: Strong Greening (dark green)
+    '91cf60', // Class 2: Moderate Greening (green)
+    'd9ef8b', // Class 3: Weak Greening (light green)
+    'ffffbf', // Class 4: Stable (yellow/neutral)
+    'd73027'  // Class 5: Browning (red)
+  ]
+};
+// Apply only to stable areas (not plowed)
+var slopeClassMasked = slopeClass.updateMask(isStable);
+Map.addLayer(slopeClassMasked, trendViz, 'Vegetation Trend (1985-2025)');
+
+// Layer 3: Emerging Biomass (Regrowth) - subset of above that is still Open
+Map.addLayer(emergingBiomass.selfMask(),
+  { palette: ['ADFF2F'] }, // Lime Green for Emerging
+  'Emerging Biomass / Regrowth');
+
+// Layer 4: Reforestation (Gain)
 // Visualize epoch of recovery using a color gradient (7 distinct epochs)
 var vizParams = {
   min: 1990,
@@ -152,7 +217,8 @@ Map.onClick(function (coords) {
   // Extract values from the final change maps at the clicked point
   var values = ee.Image.cat([
     finalRecoveryMap.rename('recovery_epoch'),
-    deforestationMask.rename('is_loss')
+    deforestationMask.rename('is_loss'),
+    emergingBiomass.rename('is_emerging')
   ]).reduceRegion({
     reducer: ee.Reducer.first(),
     geometry: point,
@@ -188,6 +254,9 @@ Map.onClick(function (coords) {
     } else if (res.is_loss === 1) {
       print('DEFORESTATION DETECTED');
       print('Land was Forest in 1985, but is Open today.');
+    } else if (res.is_emerging === 1) {
+      print('EMERGING BIOMASS DETECTED');
+      print('Land is Open, but shows stable, rising vegetation trends.');
     } else {
       print('STABLE AREA (No change detected)');
     }
@@ -214,6 +283,16 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: deforestationMask.unmask(0).byte(),
   description: 'Export_Deforestation_Mask',
+  scale: 30,
+  region: roi,
+  crs: 'EPSG:4326',
+  maxPixels: 1e13
+});
+
+// 3. Export the Emerging Biomass Map
+Export.image.toDrive({
+  image: emergingBiomass.unmask(0).byte(),
+  description: 'Export_Emerging_Biomass',
   scale: 30,
   region: roi,
   crs: 'EPSG:4326',
