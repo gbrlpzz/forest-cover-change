@@ -4,7 +4,7 @@
 //
 // Author: Gabriele Pizzi (2025)
 // License: Apache-2.0
-// DOI: 10.5281/zenodo.17831391
+// DOI: 10.5281/zenodo.17831390
 // Repository: https://github.com/gbrlpzz/ndvi-vegetation-cover-change
 // ============================================================================
 //

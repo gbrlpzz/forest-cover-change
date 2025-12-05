@@ -10,7 +10,7 @@ authors:
     email: info@gabrielepizzi.com
 identifiers:
   - type: doi
-    value: 10.5281/zenodo.17831391
+    value: 10.5281/zenodo.17831390
     description: Zenodo Archive
 repository-code: "https://github.com/gbrlpzz/ndvi-vegetation-cover-change"
 url: "https://github.com/gbrlpzz/ndvi-vegetation-cover-change"

@@ -45,7 +45,7 @@
   #v(0.5cm)
   #text(size: 11pt)[December 2025]
   #v(0.2cm)
-  #text(size: 10pt)[DOI: #link("https://doi.org/10.5281/zenodo.17831391")[10.5281/zenodo.17831391]]
+  #text(size: 10pt)[DOI: #link("https://doi.org/10.5281/zenodo.17831390")[10.5281/zenodo.17831390]]
   
   #v(1fr)
   #text(size: 10pt, fill: gray)[
