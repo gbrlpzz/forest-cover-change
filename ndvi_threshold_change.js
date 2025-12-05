@@ -57,9 +57,18 @@ function maskL57(image) {
 function maskL89(image) {
   var qa = image.select('QA_PIXEL');
   var mask = qa.bitwiseAnd(1 << 3).eq(0).and(qa.bitwiseAnd(1 << 4).eq(0));
-  return image.updateMask(mask)
-    .select(['SR_B5', 'SR_B4'], ['NIR', 'Red'])
-    .multiply(0.0000275).add(-0.2)
+  // Roy et al. (2016) Harmonization Coefficients (OLS)
+  // Aligns OLI (L8/9) to ETM+ (L7) spectral response
+  var slopes = ee.Image.constant([0.9785, 0.9548]); // Red, NIR
+  var intercepts = ee.Image.constant([-0.0095, 0.0068]); // Red, NIR
+
+  var harmonized = image.select(['SR_B4', 'SR_B5']) // Red, NIR
+    .multiply(0.0000275).add(-0.2) // Scale to reflectance
+    .multiply(slopes).add(intercepts); // Apply Roy et al. correction
+
+  return image.addBands(harmonized.rename(['Red', 'NIR']), null, true)
+    .select(['NIR', 'Red']) // Ensure only relevant bands are kept, matching maskL57
+    .updateMask(mask)
     .set('system:time_start', image.get('system:time_start'));
 }
 
