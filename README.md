@@ -58,7 +58,7 @@ If you use this software in your research, please cite:
 **APA:**
 ```
 Pizzi, G. (2025). Vegetation Cover Change Detection (Version 2.0.0) [Computer software]. 
-[https://doi.org/10.5281/zenodo.XXXXXXX](https://github.com/gbrlpzz/ndvi-vegetation-cover-change)
+[https://github.com/gbrlpzz/ndvi-vegetation-cover-change](https://github.com/gbrlpzz/ndvi-vegetation-cover-change)
 ```
 
 **BibTeX:**
