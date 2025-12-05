@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Vegetation Cover Change Detection"
+version: 2.0.0
+date-released: 2025-12-05
+authors:
+  - family-names: Pizzi
+    given-names: Gabriele
+    email: info@gabrielepizzi.com
+repository-code: "https://github.com/gbrlpzz/ndvi-vegetation-cover-change"
+url: "https://github.com/gbrlpzz/ndvi-vegetation-cover-change"
+abstract: >-
+  A Google Earth Engine script for detecting 40-year vegetation change
+  using harmonized Landsat time series (1985-2025). Implements 9-class
+  change detection based on NDVI thresholds and linear trend analysis,
+  with epoch tracking for canopy establishment and trajectory projection
+  for biomass accumulation.
+keywords:
+  - vegetation change
+  - NDVI
+  - Landsat
+  - Google Earth Engine
+  - remote sensing
+  - forest monitoring
+  - canopy change detection
+  - time series analysis
+license: Apache-2.0
