@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
-title: "Vegetation Cover Change Detection"
+title: "Vegetation Cover Change Detection via NDVI Trend Analysis on GEE"
 version: 2.0.0
 date-released: 2025-12-05
 authors:
