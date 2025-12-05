@@ -1,5 +1,5 @@
 // ============================================================================
-// VEGETATION COVER CHANGE DETECTION v2.0.0
+// VEGETATION COVER CHANGE DETECTION VIA NDVI TREND ANALYSIS ON GEE v2.0.0
 // Multi-Decadal Landsat Collection 2 Analysis (Inter-calibrated)
 //
 // Author: Gabriele Pizzi (2025)

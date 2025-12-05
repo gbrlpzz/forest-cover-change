@@ -1,5 +1,5 @@
 #set document(
-  title: "Vegetation Cover Change Detection via NDVI Trend Analysis: Methodology",
+  title: "Vegetation Cover Change Detection via NDVI Trend Analysis on GEE: Methodology",
   author: "Gabriele Pizzi",
 )
 #set page(
@@ -8,7 +8,7 @@
   header: context {
     if counter(page).get().first() > 1 [
       #set text(style: "italic", size: 9pt, fill: gray)
-      Vegetation Cover Change Detection via NDVI Trend Analysis | Pizzi 2025
+      Vegetation Cover Change Detection via NDVI Trend Analysis on GEE | Pizzi 2025
       #h(1fr)
       Methodology
       #line(length: 100%, stroke: 0.5pt + gray)
@@ -35,7 +35,7 @@
 
 
 #align(center + horizon)[
-  #text(size: 22pt, weight: "bold")[Vegetation Cover Change Detection via NDVI Trend Analysis]
+  #text(size: 22pt, weight: "bold")[Vegetation Cover Change Detection via NDVI Trend Analysis on GEE]
   #v(0.5cm)
   #text(size: 14pt, style: "italic")[Methodology]
   #v(2cm)
