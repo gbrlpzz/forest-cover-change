@@ -40,6 +40,8 @@
   #text(size: 14pt, style: "italic")[Methodology]
   #v(2cm)
   #text(size: 12pt)[*Gabriele Pizzi*]
+  #v(0.2cm)
+  #text(size: 10pt, style: "italic")[info\@gabrielepizzi.com]
   #v(0.5cm)
   #text(size: 11pt)[December 2025]
   
@@ -248,6 +250,8 @@ The baseline period (1985–1989) is excluded from epoch tracking as it serves a
 
 // Edge classes removed in version 2.0.0 due to stable trend masking.
 
+#pagebreak()
+
 = Limitations & Caveats
 
 Users must acknowledge the following limitations when interpreting results:
@@ -265,6 +269,8 @@ The complete source code, including the Google Earth Engine script and documenta
 #link("https://github.com/gbrlpzz/ndvi-vegetation-cover-change")
 
 This implementation was developed using the Google Earth Engine JavaScript API via the Code Editor interface (tested as of December 2025). While GEE maintains backward compatibility, users should be aware that API updates may occasionally require minor code adjustments for future compatibility.
+
+#pagebreak()
 
 = References
 
