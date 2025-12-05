@@ -1,5 +1,7 @@
 # Vegetation Cover Change Detection via NDVI Trend Analysis on GEE
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17831391.svg)](https://doi.org/10.5281/zenodo.17831391)
+
 A Google Earth Engine script for detecting multi-decadal vegetation change using Landsat Collection 2 time series.
 
 ## Quick Start
@@ -62,7 +64,7 @@ If you use this software in your research, please cite:
 
 **APA:**
 ```
-Pizzi, G. (2025). Vegetation Cover Change Detection via NDVI Trend Analysis on GEE (Version 2.0.0) [Computer software]. 
+Pizzi, G. (2025). Vegetation Cover Change Detection via NDVI Trend Analysis on GEE (Version 2.0.0) [Computer software]. https://doi.org/10.5281/zenodo.17831391
 https://github.com/gbrlpzz/ndvi-vegetation-cover-change
 ```
 
@@ -73,6 +75,7 @@ https://github.com/gbrlpzz/ndvi-vegetation-cover-change
   title        = {Vegetation Cover Change Detection via NDVI Trend Analysis on GEE},
   year         = 2025,
   version      = {2.0.0},
+  doi          = {10.5281/zenodo.17831391},
   url          = {https://github.com/gbrlpzz/ndvi-vegetation-cover-change}
 }
 ```
