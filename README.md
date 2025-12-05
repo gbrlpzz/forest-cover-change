@@ -30,13 +30,13 @@ A Google Earth Engine script for detecting multi-decadal vegetation change using
     
 The script generates five distinct map layers and one interactive chart:
     
-    | Layer Name | Description |
-    |------------|-------------|
-    | **Vegetation Change** | Primary 8-class thematic map (see Classification below). |
-    | **Canopy Gain Epoch** | Year of first detection for "Establishment" and "Maturation" classes (5-year cohorts). |
-    | **Years to Dense Canopy** | Projected recovery time based on current linear trends (theoretical). |
-    | **Statistical Trends** | Binary mask showing areas with significant Mann-Kendall trends (p < 0.05). |
-    | **Trend Magnitude** | Slope values (NDVI/year) for significant pixels. |
+| Layer Name | Description |
+|------------|-------------|
+| **Vegetation Change** | Primary 8-class thematic map (see Classification below). |
+| **Canopy Gain Epoch** | Year of first detection for "Establishment" and "Maturation" classes (5-year cohorts). |
+| **Years to Dense Canopy** | Projected recovery time based on current linear trends (theoretical). |
+| **Statistical Trends** | Binary mask showing areas with significant Mann-Kendall trends (p < 0.05). |
+| **Trend Magnitude** | Slope values (NDVI/year) for significant pixels. |
     
 ### Interactive Charts
 Clicking on the map generates a 40-year NDVI time series chart for that pixel, overlaying the linear trend line and statistical significance.
