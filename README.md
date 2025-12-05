@@ -14,7 +14,7 @@ A Google Earth Engine script for detecting multi-decadal vegetation change using
 - **8 Change Classes**: Loss, Degradation, Emerging, Maturation, Densification, Establishment, Sparse Accumulation, and Transitional Accumulation
 - **Dynamic Configuration**: Easily adjustable analysis period (Year Start/End) and thresholds
 - **Hemispheric/Seasonal Adaptation**: Configurable START/END months for Northern/Southern hemisphere analysis
-- **Sensitivity Analysis**: built-in parameter to test threshold stability
+- **Sensitivity Analysis**: Built-in parameter to test threshold stability
 - **Multi-scale Trend Analysis**: Compares long-term trend with recent short-term trend
 - **Trend Acceleration**: Identifies accelerating vs decelerating growth in the Inspector
 - **Statistical Significance**: Trends filtered by Mann-Kendall test (p < 0.05) to reject noise.
