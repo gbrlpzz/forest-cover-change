@@ -1,6 +1,10 @@
 // ============================================================================
-// VEGETATION COVER CHANGE DETECTION v2.0
-// Multi-Decadal Landsat Collection 2 Analysis (Dynamic Configuration)
+// VEGETATION COVER CHANGE DETECTION v2.0.0
+// Multi-Decadal Landsat Collection 2 Analysis (Inter-calibrated)
+//
+// Author: Gabriele Pizzi (2025)
+// License: Apache-2.0
+// Repository: https://github.com/gbrlpzz/ndvi-vegetation-cover-change
 // ============================================================================
 //
 // CLASSIFICATION TAXONOMY:
@@ -209,6 +213,7 @@ changeClass = changeClass.where(
   startClass.eq(1).and(endClass.eq(1)).and(trendClass.eq(1)), 5);
 
 // 6. Canopy Establishment
+// Strict definition: Sparse/Bare → Dense (New forest)
 var establishmentMask = startClass.gte(3).and(endClass.eq(1));
 changeClass = changeClass.where(establishmentMask, 6);
 
@@ -257,7 +262,10 @@ var epochCollection = ee.ImageCollection.fromImages(
   })
 );
 
-var establishmentEpoch = epochCollection.min().updateMask(establishmentMask);
+// Mask includes both Establishment (Sparse->Dense) and Maturation (Trans->Dense)
+// We track the year for ANY pixel that ends up Dense but started non-Dense
+var epochValidMask = startClass.gte(2).and(endClass.eq(1));
+var establishmentEpoch = epochCollection.min().updateMask(epochValidMask);
 
 // 7. TRAJECTORY PROJECTION (Sigmoid-based)
 // For gaining areas, project years to reach dense canopy threshold
@@ -315,7 +323,7 @@ var epochViz = {
   max: epochs.length > 0 ? epochs[epochs.length - 1].label : 2020,
   palette: ['08306b', '2171b5', '4eb3d3', '7fcdbb', 'c7e9b4', 'ffffb2', 'fd8d3c']
 };
-Map.addLayer(establishmentEpoch, epochViz, 'Canopy Establishment Epoch', false);
+Map.addLayer(establishmentEpoch, epochViz, 'Canopy Gain Epoch (Est. + Mat.)', false);
 
 // Years to canopy projection (off by default)
 var projViz = {
@@ -367,9 +375,9 @@ function makeRow(color, name, desc) {
 function updateLegend(layerName) {
   legend.clear();
 
-  if (layerName === 'Canopy Establishment Epoch') {
+  if (layerName === 'Canopy Gain Epoch (Est. + Mat.)') {
     // Epoch legend
-    legend.add(ui.Label({ value: 'Canopy Establishment Epoch', style: { fontWeight: 'bold', fontSize: '14px', margin: '0 0 4px 0' } }));
+    legend.add(ui.Label({ value: 'Canopy Gain Epoch', style: { fontWeight: 'bold', fontSize: '14px', margin: '0 0 4px 0' } }));
     legend.add(ui.Label({ value: 'When area first reached dense canopy', style: { fontSize: '10px', color: '666666', margin: '0 0 10px 0' } }));
 
     // Dynamically generate legend rows from epochs array
@@ -665,10 +673,10 @@ function updateInspector(coords) {
     if (res.epoch) {
       // Dynamic epoch end calculation
       var epochEnd = res.epoch === epochs[epochs.length - 1].label ? endYear : res.epoch + 4;
-      statusPanel.add(ui.Label('✓ Established: ' + res.epoch + '-' + epochEnd, {
+      statusPanel.add(ui.Label('✓ Canopy Reached: ' + res.epoch + '-' + epochEnd, {
         fontSize: '11px', color: '228B22', fontWeight: 'bold'
       }));
-      statusPanel.add(ui.Label('First reached NDVI ≥' + DENSE_CANOPY + ' (from sparse/bare)', {
+      statusPanel.add(ui.Label('First reached NDVI ≥' + DENSE_CANOPY + ' (from non-dense)', {
         fontSize: '9px', color: '666666', fontStyle: 'italic'
       }));
     } else if (startedDense && nowDense) {
