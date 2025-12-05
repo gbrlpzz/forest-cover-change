@@ -1,14 +1,27 @@
 // ============================================================================
-// VEGETATION COVER CHANGE DETECTION
-// Scientifically Validated Thresholds with Neutral Terminology
+// VEGETATION COVER CHANGE DETECTION v2.0
+// 40-Year Landsat Analysis (1985-2025)
 // ============================================================================
-// This script detects multi-decadal vegetation cover change using a
-// regression-first approach with peer-reviewed NDVI thresholds.
 //
-// SCIENTIFIC SOURCES:
-// - NDVI 0.6+ for dense canopy: ResearchGate meta-analyses
-// - NDVI 0.2-0.5 sparse/transitional: Copernicus, ISU studies
-// - Slope ±0.005/yr threshold: MDPI Kunming study (2000-2020)
+// CLASSIFICATION TAXONOMY:
+// -------------------------
+// NDVI Thresholds:     Dense ≥0.6 | Trans 0.4-0.6 | Sparse 0.2-0.4 | Bare <0.2
+// Trend Thresholds:    Gaining >+0.005/yr | Losing <-0.005/yr | Stable ±0.005
+//
+// CHANGE CLASSES (Strong Trend):
+//   1. Canopy Loss        - Dense → Sparse/Bare
+//   2. Canopy Thinning    - Dense → Trans (losing)
+//   3. Emerging Biomass   - Sparse → Trans (gaining)
+//   4. Canopy Thickening  - Trans → Dense (gaining)
+//   5. Canopy Densification - Dense → Dense (gaining)
+//   6. Canopy Establishment - Sparse → Dense (epoch tracked)
+//
+// EDGE CLASSES (Stable Trend):
+//   7. Edge Expansion     - Sparse → Trans
+//   8. Edge Colonization  - Trans → Dense
+//   9. Edge Retreat       - Dense → Trans
+//
+// See /docs/methodology.md for full documentation.
 // ============================================================================
 
 // 1. CONFIGURATION
@@ -93,6 +106,18 @@ var trendCollection = fullCollection.filterDate('1985-01-01', '2025-12-31')
 var linearFit = trendCollection.select(['t', 'NDVI']).reduce(ee.Reducer.linearFit());
 var slope = linearFit.select('scale');
 var intercept = linearFit.select('offset');
+
+// Recent 10-year trend (2015-2025) for momentum comparison
+var recentTrendCollection = fullCollection.filterDate('2015-01-01', '2025-12-31')
+  .filter(ee.Filter.calendarRange(6, 9, 'month'))
+  .map(function (img) {
+    var ndvi = img.normalizedDifference(['NIR', 'Red']).rename('NDVI');
+    var t = ee.Image.constant(img.get('system:time_start')).divide(31536000000).float().rename('t');
+    return ndvi.addBands(t);
+  });
+
+var recentFit = recentTrendCollection.select(['t', 'NDVI']).reduce(ee.Reducer.linearFit());
+var recentSlope = recentFit.select('scale').rename('recent_slope');
 
 // Trend class: 1=Gaining, 2=Stable, 3=Losing
 var trendClass = ee.Image(2)
@@ -229,22 +254,14 @@ var projViz = {
 };
 Map.addLayer(yearsToCanopy, projViz, 'Years to Dense Canopy (Projection)', false);
 
-// LEGEND
+// DYNAMIC LEGEND - Updates based on visible layer
 var legend = ui.Panel({
   style: { position: 'bottom-left', padding: '10px 14px', backgroundColor: 'white', maxWidth: '280px' }
 });
-
-legend.add(ui.Label({
-  value: 'Vegetation Cover Change',
-  style: { fontWeight: 'bold', fontSize: '14px', margin: '0 0 4px 0' }
-}));
-legend.add(ui.Label({
-  value: '40-Year Analysis (1985-2025)',
-  style: { fontSize: '10px', color: '666666', margin: '0 0 10px 0' }
-}));
+Map.add(legend);
 
 function makeRow(color, name, desc) {
-  var colorBox = ui.Label({ style: { backgroundColor: '#' + color, padding: '10px', margin: '0 8px 6px 0', border: '1px solid #ccc' } });
+  var colorBox = ui.Label({ style: { backgroundColor: '#' + color, padding: '10px', margin: '0 8px 6px 0' } });
   var textPanel = ui.Panel({
     widgets: [
       ui.Label({ value: name, style: { fontWeight: 'bold', fontSize: '11px', margin: '0' } }),
@@ -255,28 +272,70 @@ function makeRow(color, name, desc) {
   return ui.Panel({ widgets: [colorBox, textPanel], layout: ui.Panel.Layout.Flow('horizontal'), style: { margin: '0 0 2px 0' } });
 }
 
-legend.add(ui.Label({ value: 'With Strong Trend (>±0.005/yr)', style: { fontSize: '9px', color: '666666', margin: '0 0 4px 0' } }));
-legend.add(makeRow('FF00FF', 'Canopy Loss', 'Dense → Sparse/Bare'));
-legend.add(makeRow('FFA500', 'Canopy Thinning', 'Dense → Trans (losing)'));
-legend.add(makeRow('ADFF2F', 'Emerging Biomass', 'Sparse → Trans (gaining)'));
-legend.add(makeRow('90EE90', 'Canopy Thickening', 'Trans → Dense (gaining)'));
-legend.add(makeRow('006400', 'Canopy Densification', 'Dense → Dense (gaining)'));
-legend.add(makeRow('0000FF', 'Canopy Establishment', 'Sparse → Dense'));
+function makeGradient(colors, labels) {
+  var gradientPanel = ui.Panel({ layout: ui.Panel.Layout.Flow('horizontal'), style: { margin: '4px 0' } });
+  for (var i = 0; i < colors.length; i++) {
+    gradientPanel.add(ui.Label({
+      value: labels[i],
+      style: { backgroundColor: '#' + colors[i], color: i < colors.length / 2 ? 'white' : 'black', padding: '4px 8px', fontSize: '9px', margin: '0' }
+    }));
+  }
+  return gradientPanel;
+}
 
-legend.add(ui.Label({ value: 'With Stable Trend (<±0.005/yr)', style: { fontSize: '9px', color: '666666', margin: '8px 0 4px 0' } }));
-legend.add(makeRow('FFFF00', 'Edge Expansion', 'Sparse → Trans'));
-legend.add(makeRow('00CED1', 'Edge Colonization', 'Trans → Dense'));
-legend.add(makeRow('DDA0DD', 'Edge Retreat', 'Dense → Trans'));
+function updateLegend(layerName) {
+  legend.clear();
 
-// Thresholds as clean footer text
-var footerPanel = ui.Panel({ style: { margin: '10px 0 0 0', padding: '8px 0 0 0' } });
-footerPanel.add(ui.Label({ value: '─────────────────────', style: { fontSize: '8px', color: 'CCCCCC', margin: '0 0 4px 0' } }));
-footerPanel.add(ui.Label({ value: 'Thresholds', style: { fontWeight: 'bold', fontSize: '10px', margin: '0 0 2px 0' } }));
-footerPanel.add(ui.Label({ value: 'Dense ≥0.6 | Trans 0.4-0.6 | Sparse 0.2-0.4 | Bare <0.2', style: { fontSize: '9px', color: '555555' } }));
-footerPanel.add(ui.Label({ value: 'Gaining >+0.005/yr | Losing <-0.005/yr', style: { fontSize: '9px', color: '555555' } }));
-legend.add(footerPanel);
+  if (layerName === 'Canopy Establishment Epoch') {
+    // Epoch legend
+    legend.add(ui.Label({ value: 'Canopy Establishment Epoch', style: { fontWeight: 'bold', fontSize: '14px', margin: '0 0 4px 0' } }));
+    legend.add(ui.Label({ value: 'When area first reached dense canopy', style: { fontSize: '10px', color: '666666', margin: '0 0 10px 0' } }));
+    legend.add(makeRow('08306b', '1990-1994', 'Earliest'));
+    legend.add(makeRow('2171b5', '1995-1999', ''));
+    legend.add(makeRow('4eb3d3', '2000-2004', ''));
+    legend.add(makeRow('7fcdbb', '2005-2009', ''));
+    legend.add(makeRow('c7e9b4', '2010-2014', ''));
+    legend.add(makeRow('ffffb2', '2015-2019', ''));
+    legend.add(makeRow('fd8d3c', '2020-2025', 'Latest'));
 
-Map.add(legend);
+  } else if (layerName === 'Years to Dense Canopy (Projection)') {
+    // Projection legend
+    legend.add(ui.Label({ value: 'Years to Dense Canopy', style: { fontWeight: 'bold', fontSize: '14px', margin: '0 0 4px 0' } }));
+    legend.add(ui.Label({ value: 'Linear projection for gaining areas', style: { fontSize: '10px', color: '666666', margin: '0 0 10px 0' } }));
+    legend.add(makeRow('00FF00', '0-5 years', 'Imminent'));
+    legend.add(makeRow('7FFF00', '5-10 years', ''));
+    legend.add(makeRow('FFFF00', '10-20 years', ''));
+    legend.add(makeRow('FF7F00', '20-30 years', ''));
+    legend.add(makeRow('FF0000', '>30 years', 'Distant'));
+
+  } else {
+    // Default: Vegetation Change legend
+    legend.add(ui.Label({ value: 'Vegetation Cover Change', style: { fontWeight: 'bold', fontSize: '14px', margin: '0 0 4px 0' } }));
+    legend.add(ui.Label({ value: '40-Year Analysis (1985-2025)', style: { fontSize: '10px', color: '666666', margin: '0 0 10px 0' } }));
+
+    legend.add(ui.Label({ value: 'With Strong Trend (>±0.005/yr)', style: { fontSize: '9px', color: '666666', margin: '0 0 4px 0' } }));
+    legend.add(makeRow('FF00FF', 'Canopy Loss', 'Dense → Sparse/Bare'));
+    legend.add(makeRow('FFA500', 'Canopy Thinning', 'Dense → Trans (losing)'));
+    legend.add(makeRow('ADFF2F', 'Emerging Biomass', 'Sparse → Trans (gaining)'));
+    legend.add(makeRow('90EE90', 'Canopy Thickening', 'Trans → Dense (gaining)'));
+    legend.add(makeRow('006400', 'Canopy Densification', 'Dense → Dense (gaining)'));
+    legend.add(makeRow('0000FF', 'Canopy Establishment', 'Sparse → Dense'));
+
+    legend.add(ui.Label({ value: 'With Stable Trend (<±0.005/yr)', style: { fontSize: '9px', color: '666666', margin: '8px 0 4px 0' } }));
+    legend.add(makeRow('FFFF00', 'Edge Expansion', 'Sparse → Trans'));
+    legend.add(makeRow('00CED1', 'Edge Colonization', 'Trans → Dense'));
+    legend.add(makeRow('DDA0DD', 'Edge Retreat', 'Dense → Trans'));
+
+    var footerPanel = ui.Panel({ style: { margin: '10px 0 0 0', padding: '8px 0 0 0' } });
+    footerPanel.add(ui.Label({ value: 'Dense ≥0.6 | Trans 0.4-0.6 | Sparse 0.2-0.4', style: { fontSize: '9px', color: '888888' } }));
+    legend.add(footerPanel);
+  }
+}
+
+// Initialize with default legend
+updateLegend('Vegetation Change');
+
+// Note: Legend updates automatically when you click map (checks visible layer)
 
 // Create inspector panel (floating overlay like legend)
 var inspectorPanel = ui.Panel({
@@ -307,9 +366,19 @@ var trendNames = { 1: 'Gaining', 2: 'Stable', 3: 'Losing' };
 
 Map.style().set('cursor', 'crosshair');
 
-// Close button for panel
+// Inspector function
 function updateInspector(coords) {
   var point = ee.Geometry.Point(coords.lon, coords.lat);
+
+  // Update legend based on visible layer
+  var layers = Map.layers();
+  for (var i = 0; i < layers.length(); i++) {
+    var layer = layers.get(i);
+    if (layer.getShown()) {
+      updateLegend(layer.getName());
+      break;
+    }
+  }
 
   // Clear and show panel
   inspectorPanel.clear();
@@ -325,6 +394,7 @@ function updateInspector(coords) {
     endClass.rename('end_class'),
     trendClass.rename('trend_class'),
     slope.rename('slope'),
+    recentSlope,
     endNDVI.rename('current_ndvi'),
     establishmentEpoch.rename('epoch'),
     yearsToCanopy.rename('years_proj')
@@ -391,19 +461,56 @@ function updateInspector(coords) {
 
     // Trend section
     var slopeVal = res.slope || 0;
+    var recentSlopeVal = res.recent_slope || 0;
     var slopeClass = slopeVal > 0.005 ? 'Gaining' : (slopeVal < -0.005 ? 'Losing' : 'Stable');
     var slopeColor = slopeVal > 0.005 ? '228B22' : (slopeVal < -0.005 ? 'CC0000' : '888888');
+    var recentClass = recentSlopeVal > 0.005 ? 'Gaining' : (recentSlopeVal < -0.005 ? 'Losing' : 'Stable');
+    var recentColor = recentSlopeVal > 0.005 ? '228B22' : (recentSlopeVal < -0.005 ? 'CC0000' : '888888');
 
-    inspectorPanel.add(ui.Label('40-Year Trend (1985-2025)', { fontWeight: 'bold', fontSize: '11px', margin: '0 0 4px 0' }));
-    var trendPanel = ui.Panel({
+    // Determine momentum (comparing recent to long-term)
+    var momentum = '';
+    var momentumColor = '888888';
+    if (Math.abs(recentSlopeVal - slopeVal) < 0.002) {
+      momentum = '→ Consistent';
+      momentumColor = '666666';
+    } else if (recentSlopeVal > slopeVal + 0.002) {
+      momentum = '↑ Accelerating';
+      momentumColor = '228B22';
+    } else {
+      momentum = '↓ Decelerating';
+      momentumColor = 'CC6600';
+    }
+
+    inspectorPanel.add(ui.Label('Trend Analysis', { fontWeight: 'bold', fontSize: '11px', margin: '0 0 4px 0' }));
+
+    // 40-year row
+    var trend40Panel = ui.Panel({
       widgets: [
-        ui.Label('Slope: ' + (slopeVal * 1000).toFixed(3) + '×10⁻³/yr', { fontSize: '11px' }),
-        ui.Label(slopeClass, { fontSize: '11px', color: slopeColor, fontWeight: 'bold' })
+        ui.Label('40yr:', { fontSize: '10px', color: '666666' }),
+        ui.Label((slopeVal * 1000).toFixed(2) + '×10⁻³/yr', { fontSize: '10px' }),
+        ui.Label(slopeClass, { fontSize: '10px', color: slopeColor, fontWeight: 'bold' })
       ],
       layout: ui.Panel.Layout.Flow('horizontal'),
-      style: { margin: '0 0 8px 0' }
+      style: { margin: '0 0 2px 0' }
     });
-    inspectorPanel.add(trendPanel);
+    inspectorPanel.add(trend40Panel);
+
+    // 10-year row
+    var trend10Panel = ui.Panel({
+      widgets: [
+        ui.Label('10yr:', { fontSize: '10px', color: '666666' }),
+        ui.Label((recentSlopeVal * 1000).toFixed(2) + '×10⁻³/yr', { fontSize: '10px' }),
+        ui.Label(recentClass, { fontSize: '10px', color: recentColor, fontWeight: 'bold' })
+      ],
+      layout: ui.Panel.Layout.Flow('horizontal'),
+      style: { margin: '0 0 2px 0' }
+    });
+    inspectorPanel.add(trend10Panel);
+
+    // Momentum indicator
+    inspectorPanel.add(ui.Label(momentum, {
+      fontSize: '10px', color: momentumColor, fontStyle: 'italic', margin: '0 0 8px 0'
+    }));
 
     // State transition
     inspectorPanel.add(ui.Label('State Transition', { fontWeight: 'bold', fontSize: '11px', margin: '0 0 4px 0' }));
@@ -431,26 +538,97 @@ function updateInspector(coords) {
     }
 
     // Canopy Status (unified epoch/projection)
-    inspectorPanel.add(ui.Label('Canopy Status', { fontWeight: 'bold', fontSize: '11px', margin: '8px 0 4px 0' }));
+    inspectorPanel.add(ui.Label('Dense Canopy Status', { fontWeight: 'bold', fontSize: '11px', margin: '8px 0 4px 0' }));
+
+    var statusPanel = ui.Panel({ style: { margin: '0 0 4px 0' } });
+    var startedDense = res.start_class === 1; // Was Dense at start (1985)
+    var nowDense = res.current_ndvi >= 0.6;
 
     if (res.epoch) {
-      // Already reached dense canopy - show when
+      // Sparse/Bare → Dense with tracked epoch
       var epochEnd = res.epoch === 2020 ? 2025 : res.epoch + 4;
-      inspectorPanel.add(ui.Label('Established ' + res.epoch + '-' + epochEnd, { fontSize: '11px', color: '228B22', fontWeight: 'bold' }));
-    } else if (res.current_ndvi >= 0.6) {
-      // Currently at dense canopy but no epoch (was always dense)
-      inspectorPanel.add(ui.Label('Dense canopy (pre-1985)', { fontSize: '11px', color: '228B22' }));
-    } else if (slopeVal > 0 && res.years_proj && res.years_proj < 100) {
-      // Gaining - show projection
-      var projYear = 2025 + Math.round(res.years_proj);
-      inspectorPanel.add(ui.Label('Projected ~' + projYear + ' (' + Math.round(res.years_proj) + ' yrs)', { fontSize: '11px', color: '0066CC' }));
-    } else if (slopeVal <= 0) {
-      // Not gaining
-      inspectorPanel.add(ui.Label('Not gaining (no projection)', { fontSize: '10px', color: '888888' }));
+      statusPanel.add(ui.Label('✓ Established: ' + res.epoch + '-' + epochEnd, {
+        fontSize: '11px', color: '228B22', fontWeight: 'bold'
+      }));
+      statusPanel.add(ui.Label('First reached NDVI ≥0.6 (from sparse/bare)', {
+        fontSize: '9px', color: '666666', fontStyle: 'italic'
+      }));
+    } else if (startedDense && nowDense) {
+      // Was Dense, still Dense - established before study
+      statusPanel.add(ui.Label('✓ Established: pre-1985', {
+        fontSize: '11px', color: '228B22', fontWeight: 'bold'
+      }));
+      statusPanel.add(ui.Label('Dense canopy throughout study period', {
+        fontSize: '9px', color: '666666', fontStyle: 'italic'
+      }));
+    } else if (!startedDense && nowDense && slopeVal > 0) {
+      // Transitioned TO Dense (from Trans) - estimate when it crossed 0.6
+      // back-calculate: years ago = (current - 0.6) / slope
+      var yearsAgo = (currentNDVI - 0.6) / slopeVal;
+      var crossYear = Math.round(2025 - yearsAgo);
+      statusPanel.add(ui.Label('✓ Established: ~' + crossYear, {
+        fontSize: '11px', color: '228B22', fontWeight: 'bold'
+      }));
+      statusPanel.add(ui.Label('Estimated crossing from ' + (vegNames[res.start_class] || 'transitional'), {
+        fontSize: '9px', color: '666666', fontStyle: 'italic'
+      }));
+    } else if (!startedDense && nowDense) {
+      // Now dense but stable/declining - recently crossed
+      statusPanel.add(ui.Label('✓ Established: ~2020s', {
+        fontSize: '11px', color: '228B22', fontWeight: 'bold'
+      }));
+      statusPanel.add(ui.Label('Recently reached threshold', {
+        fontSize: '9px', color: '666666', fontStyle: 'italic'
+      }));
+    } else if (slopeVal > 0) {
+      // Gaining - calculate years based on current NDVI and slope
+      var yearsNeeded = (0.6 - currentNDVI) / slopeVal;
+      if (yearsNeeded <= 0) {
+        statusPanel.add(ui.Label('✓ At threshold', {
+          fontSize: '11px', color: '228B22', fontWeight: 'bold'
+        }));
+      } else if (yearsNeeded <= 50) {
+        var projYear = 2025 + Math.round(yearsNeeded);
+        statusPanel.add(ui.Label('↗ Projected: ~' + projYear, {
+          fontSize: '11px', color: '0066CC', fontWeight: 'bold'
+        }));
+        statusPanel.add(ui.Label('Est. ' + Math.round(yearsNeeded) + ' years to reach NDVI ≥0.6', {
+          fontSize: '9px', color: '666666', fontStyle: 'italic'
+        }));
+      } else {
+        statusPanel.add(ui.Label('↗ Projected: ~' + (2025 + Math.round(yearsNeeded)) + ' (slow)', {
+          fontSize: '11px', color: '888888'
+        }));
+        statusPanel.add(ui.Label('~' + Math.round(yearsNeeded) + ' years at current rate', {
+          fontSize: '9px', color: '999999', fontStyle: 'italic'
+        }));
+      }
+    } else if (slopeVal < -0.005) {
+      // Losing strongly
+      statusPanel.add(ui.Label('↘ Declining (no projection)', {
+        fontSize: '11px', color: 'CC0000'
+      }));
+      statusPanel.add(ui.Label('Strong negative trend', {
+        fontSize: '9px', color: '999999', fontStyle: 'italic'
+      }));
+    } else if (slopeVal < 0) {
+      // Slight decline
+      statusPanel.add(ui.Label('↘ Slight decline', {
+        fontSize: '11px', color: 'CC6600'
+      }));
+      statusPanel.add(ui.Label('Trend negative but below -0.005/yr', {
+        fontSize: '9px', color: '999999', fontStyle: 'italic'
+      }));
     } else {
-      // Gaining but very slowly
-      inspectorPanel.add(ui.Label('Projected >100 yrs', { fontSize: '10px', color: '888888' }));
+      // Truly stable (slope = 0)
+      statusPanel.add(ui.Label('— Stable (no change)', {
+        fontSize: '11px', color: '888888'
+      }));
+      statusPanel.add(ui.Label('No measurable NDVI trend', {
+        fontSize: '9px', color: '999999', fontStyle: 'italic'
+      }));
     }
+    inspectorPanel.add(statusPanel);
 
     // NDVI Chart
     var chart = ui.Chart.feature.byFeature({
