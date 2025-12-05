@@ -1,6 +1,6 @@
 # Vegetation Cover Change Detection via NDVI Trend Analysis on GEE
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17831391.svg)](https://doi.org/10.5281/zenodo.17831391)
+![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17831391.svg)
 
 A Google Earth Engine script for detecting multi-decadal vegetation change using Landsat Collection 2 time series.
 
